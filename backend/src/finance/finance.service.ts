@@ -525,29 +525,29 @@ export class FinanceService {
       currency: 'USD',
       openingCashCents: Number(accounts[0]?.balanceCents ?? 0n),
       currentCashCents: Number(accounts[0]?.balanceCents ?? 0n),
-      transactions: transactions.map((transaction) => ({
+      transactions: transactions.map((transaction: DbTransaction) => ({
         ...transaction,
         date: transaction.occurredAt.toISOString(),
         amountCents: Number(transaction.amountCents),
       })),
-      budgets: budgets.map((budget) => ({
+      budgets: budgets.map((budget: DbBudget) => ({
         ...budget,
         allocatedCents: Number(budget.allocatedCents),
         spentCents: Number(budget.spentCents),
       })),
-      receivables: receivables.map((invoice) => ({
+      receivables: receivables.map((invoice: DbInvoice) => ({
         ...invoice,
         dueDate: invoice.dueDate.toISOString(),
         status: effectiveInvoiceStatus(invoice.status, invoice.dueDate),
         amountCents: Number(invoice.amountCents),
       })),
-      payables: payables.map((invoice) => ({
+      payables: payables.map((invoice: DbInvoice) => ({
         ...invoice,
         dueDate: invoice.dueDate.toISOString(),
         status: effectiveInvoiceStatus(invoice.status, invoice.dueDate),
         amountCents: Number(invoice.amountCents),
       })),
-      monthlyTrend: monthlyTrend.map((month) => ({
+      monthlyTrend: monthlyTrend.map((month: DbMonth) => ({
         ...month,
         revenueCents: Number(month.revenueCents),
         expensesCents: Number(month.expensesCents),
