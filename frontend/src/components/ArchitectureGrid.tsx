@@ -68,7 +68,7 @@ export const ArchitectureGrid: React.FC = () => {
           return (
             <div
               key={tier.title}
-              className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5 backdrop-blur-sm hover:border-slate-700 transition-all"
+              className="glass-panel rounded-2xl p-5 transition-all duration-200 hover:-translate-y-0.5"
             >
               <div className="flex items-center justify-between mb-3">
                 <div

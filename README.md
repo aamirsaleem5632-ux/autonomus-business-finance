@@ -1,6 +1,6 @@
-# Autonomous Business Finance Platform
+# OptiFinance
 
-> A business finance operations dashboard with PostgreSQL-backed financial records, deterministic specialist analyses, and clearly labeled simulated data when no database is connected.
+> Autonomous Business Finance — a finance operations dashboard with PostgreSQL-backed financial records, deterministic specialist analyses, and clearly labeled simulated data when no database is connected.
 
 ---
 

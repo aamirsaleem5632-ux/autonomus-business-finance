@@ -12,8 +12,8 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, label, size = 
       case 'ok':
       case 'connected':
         return {
-          bg: 'bg-emerald-950/70 border-emerald-500/40 text-emerald-400',
-          dot: 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]',
+          bg: 'bg-emerald-500/[0.12] border-emerald-400/35 text-emerald-300 shadow-[0_0_14px_rgba(212,175,55,0.09)]',
+          dot: 'bg-emerald-400 shadow-[0_0_9px_rgba(212,175,55,0.78)]',
           text: label || (status === 'connected' ? 'Connected' : 'Operational'),
         };
       case 'degraded':
@@ -47,7 +47,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, label, size = 
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full border ${current.bg} ${sizeClasses}`}
+      className={`inline-flex items-center gap-1.5 rounded-full border font-medium tracking-[0.01em] transition-colors duration-200 ${current.bg} ${sizeClasses}`}
     >
       <span className={`inline-block h-2 w-2 rounded-full ${current.dot} animate-pulse`} />
       <span>{current.text}</span>

@@ -34,16 +34,16 @@ export const HealthCard: React.FC<HealthCardProps> = ({
   };
 
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 backdrop-blur-sm shadow-xl">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-5">
+    <div className="glass-panel rounded-2xl p-5 sm:p-6">
+      <div className="flex flex-col justify-between gap-4 border-b border-slate-800/80 pb-5 sm:flex-row sm:items-center">
         <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-cyan-500/20 bg-cyan-500/[0.08] text-cyan-300">
             <Server className="h-6 w-6" />
           </div>
           <div>
             <div className="flex items-center gap-2.5">
               <h2 className="text-xl font-bold text-white">System Health & Telemetry</h2>
-              <code className="text-xs font-mono bg-slate-800 text-cyan-300 px-2 py-0.5 rounded">
+              <code className="rounded border border-slate-700/70 bg-slate-950/60 px-2 py-0.5 font-mono text-xs text-cyan-300">
                 GET /api/health
               </code>
             </div>
@@ -74,9 +74,9 @@ export const HealthCard: React.FC<HealthCardProps> = ({
       </div>
 
       {/* Primary Metrics Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {/* Service Status */}
-        <div className="rounded-xl border border-slate-800/80 bg-slate-950/40 p-4">
+        <div className="glass-inset rounded-xl p-4">
           <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
             <span>Overall Service Status</span>
             <Zap className="h-3.5 w-3.5 text-cyan-400" />
@@ -93,7 +93,7 @@ export const HealthCard: React.FC<HealthCardProps> = ({
         </div>
 
         {/* Database Status */}
-        <div className="rounded-xl border border-slate-800/80 bg-slate-950/40 p-4">
+        <div className="glass-inset rounded-xl p-4">
           <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
             <span>Database (PostgreSQL / Prisma)</span>
             <Database className="h-3.5 w-3.5 text-indigo-400" />
@@ -119,7 +119,7 @@ export const HealthCard: React.FC<HealthCardProps> = ({
         </div>
 
         {/* Runtime Memory */}
-        <div className="rounded-xl border border-slate-800/80 bg-slate-950/40 p-4">
+        <div className="glass-inset rounded-xl p-4">
           <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
             <span>Memory Footprint</span>
             <Cpu className="h-3.5 w-3.5 text-emerald-400" />
@@ -136,7 +136,7 @@ export const HealthCard: React.FC<HealthCardProps> = ({
         </div>
 
         {/* Uptime & Environment */}
-        <div className="rounded-xl border border-slate-800/80 bg-slate-950/40 p-4">
+        <div className="glass-inset rounded-xl p-4">
           <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
             <span>Uptime & Environment</span>
             <Clock className="h-3.5 w-3.5 text-amber-400" />
@@ -158,7 +158,7 @@ export const HealthCard: React.FC<HealthCardProps> = ({
             <span>Backend Response Payload:</span>
             <span>Timestamp: {health.timestamp}</span>
           </div>
-          <pre className="rounded-xl bg-slate-950 p-4 text-xs font-mono text-cyan-300 overflow-x-auto border border-slate-800">
+          <pre className="glass-inset overflow-x-auto rounded-xl p-4 font-mono text-xs text-cyan-200">
             {JSON.stringify(health, null, 2)}
           </pre>
         </div>
