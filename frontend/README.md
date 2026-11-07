@@ -23,7 +23,9 @@ frontend/
 ```bash
 # Optional: copy .env.example to .env.local. Keep VITE_API_BASE_URL=/api so Vite proxies
 # requests to NestJS and avoids browser CORS issues. Set VITE_API_PROXY_TARGET only if the
-# backend listens on a different host or port. No frontend secret configuration is required.
+# backend listens on a different host or port. Set VITE_USE_SIMULATED_DATA=true to force
+# local simulated finance data. Finance requests also fall back locally on network errors
+# and HTTP 404 responses. No frontend secret configuration is required.
 
 # Start development server (with /api proxy to http://127.0.0.1:3000)
 npm run dev
