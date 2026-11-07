@@ -16,7 +16,9 @@ describe('HealthController', () => {
   };
 
   const mockConfigService = {
-    get: vi.fn().mockReturnValue('test'),
+    get: vi.fn((key: string) =>
+      key === 'nodeEnv' ? 'test' : 'database',
+    ),
   };
 
   beforeEach(async () => {
@@ -41,6 +43,22 @@ describe('HealthController', () => {
     expect(health.status).toBe('ok');
     expect(health.service).toBe('autonomous-business-finance-backend');
     expect(health.database.status).toBe('connected');
+  });
+
+  it('reports a healthy runtime with explicit simulated finance mode', async () => {
+    mockConfigService.get.mockImplementation((key: string) =>
+      key === 'nodeEnv' ? 'test' : 'simulated',
+    );
+    mockPrismaService.checkHealth.mockResolvedValue({
+      status: 'unconfigured',
+      details: 'Simulated finance mode enabled; database connection skipped.',
+    });
+
+    const health = await controller.getHealth();
+
+    expect(health.status).toBe('ok');
+    expect(health.database.status).toBe('unconfigured');
+    expect(health.database.details).toContain('Simulated finance mode enabled');
   });
 
   it('should throw BadRequestException on error-demo', () => {

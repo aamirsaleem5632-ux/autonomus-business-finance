@@ -4,6 +4,8 @@
 - **Node.js**: >= 20.x (tested on Node v24)
 - **npm**: >= 10.x
 - **PostgreSQL**: Optional for baseline health checks; required for database persistence operations.
+- Finance routes use labeled demo data without a connected, populated database.
+- The assistant is rules-based; no external LLM or bank connector is configured.
 
 ---
 
@@ -15,9 +17,11 @@
 git clone <repository_url>
 cd autonomous-business-finance
 
-# Copy environment templates
+# Copy the backend template and replace its database password placeholder
 cp backend/.env.example backend/.env
-cp frontend/.env.example frontend/.env
+
+# Create a root .env with a private POSTGRES_PASSWORD for Docker Compose.
+# Add separate random 32+ character viewer/admin finance keys to backend/.env.
 ```
 
 ### 2.2 Running Backend and Frontend

@@ -21,11 +21,11 @@ export const Navbar: React.FC<NavbarProps> = ({ backendConnected, status }) => {
                 Autonomous Business Finance Platform
               </h1>
               <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-cyan-400">
-                Phase 1 Architecture
+                Finance Operations
               </span>
             </div>
             <p className="text-xs text-slate-400 hidden sm:block">
-              Industrial Enterprise Substrate &bull; Node.js / NestJS / React / TypeScript / PostgreSQL
+              Financial analytics &bull; NestJS / React / TypeScript / PostgreSQL
             </p>
           </div>
         </div>

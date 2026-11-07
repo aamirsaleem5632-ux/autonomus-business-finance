@@ -33,3 +33,69 @@ model AuditLog {
   @@index([entity, entityId])
   @@map("audit_logs")
 }
+
+model FinancialTransaction {
+  id            String   @id @default(uuid())
+  occurredAt    DateTime @map("occurred_at")
+  description   String
+  counterparty  String
+  type          String
+  category      String
+  amountCents   BigInt   @map("amount_cents")
+  source        String   @default("manual")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([occurredAt])
+  @@index([type, category])
+  @@map("financial_transactions")
+}
+
+model FinancialBudget {
+  id             String   @id @default(uuid())
+  department     String
+  allocatedCents BigInt   @map("allocated_cents")
+  spentCents     BigInt   @default(0) @map("spent_cents")
+  periodStart    DateTime @map("period_start")
+  periodEnd      DateTime @map("period_end")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@index([department, periodStart, periodEnd])
+  @@map("financial_budgets")
+}
+
+model FinancialInvoice {
+  id            String   @id @default(uuid())
+  direction     String
+  counterparty  String
+  dueDate       DateTime @map("due_date")
+  amountCents   BigInt   @map("amount_cents")
+  status        String   @default("open")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([direction, status, dueDate])
+  @@map("financial_invoices")
+}
+
+model FinancialAccount {
+  id              String   @id @default(uuid())
+  name            String
+  currency        String   @default("USD")
+  balanceCents    BigInt   @map("balance_cents")
+  includedInCash  Boolean  @default(true) @map("included_in_cash")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("financial_accounts")
+}
+
+model AgentRun {
+  id          String   @id @default(uuid())
+  agentId     String   @map("agent_id")
+  status      String
+  durationMs  Int      @map("duration_ms")
+  result      Json
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([agentId, createdAt])
+  @@map("agent_runs")
+}

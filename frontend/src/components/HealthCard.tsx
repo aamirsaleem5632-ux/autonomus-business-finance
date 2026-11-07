@@ -105,7 +105,9 @@ export const HealthCard: React.FC<HealthCardProps> = ({
                 health?.database.status === 'connected'
                   ? 'Connected'
                   : health?.database.status === 'unconfigured'
-                    ? 'Config Required'
+                    ? health.database.details?.includes('Simulated finance mode')
+                      ? 'Demo Mode'
+                      : 'Config Required'
                     : 'Configured (Standby)'
               }
             />

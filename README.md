@@ -1,20 +1,23 @@
 # Autonomous Business Finance Platform
 
-> Industrial-grade, browser-based autonomous business finance platform architecture and development foundation (Phase 1).
+> A business finance operations dashboard with PostgreSQL-backed financial records, deterministic specialist analyses, and clearly labeled simulated data when no database is connected.
 
 ---
 
 ## 1. Overview
 
-The **Autonomous Business Finance Platform** is engineered to provide an enterprise-grade substrate for high-assurance financial operations, data persistence, and automated execution workflows.
+The **Business Autonomous Finance** project builds on its original application foundation with a financial dashboard, typed APIs, auditable record ingestion, and coordinated finance-analysis agents.
 
-This repository contains the completed **Phase 1: Architecture & Development Environment Initialization**. It delivers:
+The current implementation delivers:
 - A decoupled, strictly typed **React 19 + TypeScript + Vite + Tailwind CSS** frontend.
 - A modular **Node.js + NestJS 12 + TypeScript** REST backend API.
 - **PostgreSQL** relational database persistence configured with **Prisma ORM (v6)**.
-- Unified **ESLint & Prettier** code quality enforcement across all workspaces.
-- Standardized `/api` routing prefix with global error normalization (`GlobalHttpExceptionFilter`).
-- Centralized environment variable management with zero hardcoded credentials.
+- Income, expense, account-balance, budget, receivable, payable, and agent-run data models.
+- Five deterministic finance specialists and a rules-based assistant that delegates analyses and presents evidence.
+- Input-validated, role-keyed ingestion APIs with audit logging; no payment execution or money transfer functionality.
+- Clearly labeled simulated dashboard data when the database contains no finance records or is not configured.
+
+No bank-feed credentials or external LLM provider are configured in this repository. The assistant is explicitly rules-based rather than a simulated external AI integration.
 
 ---
 
@@ -24,13 +27,15 @@ This repository contains the completed **Phase 1: Architecture & Development Env
 autonomous-business-finance/
 ├── backend/                             # NestJS 12 Application
 │   ├── prisma/
-│   │   └── schema.prisma                # PostgreSQL data schema & models
+│   │   ├── schema.prisma                # PostgreSQL data schema & models
+│   │   └── migrations/                  # Finance domain and audit schema
 │   ├── src/
 │   │   ├── common/
 │   │   │   ├── filters/                 # GlobalHttpExceptionFilter
 │   │   │   └── interceptors/            # LoggingInterceptor & metrics
 │   │   ├── config/                      # Dynamic configuration loader
 │   │   ├── health/                      # Health check module & controller
+│   │   ├── finance/                     # Data APIs, orchestration, deterministic agents
 │   │   ├── prisma/                      # PrismaService & PrismaModule
 │   │   ├── app.module.ts                # Root application module
 │   │   └── main.ts                      # Server bootstrap & global prefix
@@ -40,10 +45,10 @@ autonomous-business-finance/
 │   └── tsconfig.json                    # TypeScript configuration
 ├── frontend/                            # React 19 + Vite Application
 │   ├── src/
-│   │   ├── api/                         # Typed API client & health queries
-│   │   ├── components/                  # UI components (Navbar, HealthCard, etc.)
+│   │   ├── api/                         # Typed API client & finance/health queries
+│   │   ├── components/                  # Dashboard, assistant, health components
 │   │   ├── types/                       # Shared TypeScript interface definitions
-│   │   ├── App.tsx                      # Main dashboard page
+│   │   ├── App.tsx                      # Finance command center
 │   │   ├── index.css                    # Tailwind CSS v4 setup
 │   │   └── main.tsx                     # React client bootstrap
 │   ├── .env.example                     # Frontend environment template
@@ -93,16 +98,16 @@ autonomous-business-finance/
 git clone <repo-url>
 cd autonomous-business-finance
 
-# 2. Setup backend environment file
+# 2. Setup backend environment file and replace CHANGE_ME
 cp backend/.env.example backend/.env
 
-# 3. Setup frontend environment file
-cp frontend/.env.example frontend/.env
+# 3. Create a root .env file containing a private local database password
+#    POSTGRES_PASSWORD=<your-local-password>
 ```
 
 ### 4.3 Database Initialization (Optional for Local PostgreSQL)
 
-If you have Docker installed, start a local PostgreSQL container:
+If you have Docker installed, configure `POSTGRES_PASSWORD` in the root `.env` file and start PostgreSQL:
 
 ```bash
 docker compose up -d
@@ -112,7 +117,11 @@ Generate the Prisma Client:
 
 ```bash
 npm run prisma:generate
+npm run prisma:validate
+npm run prisma:migrate
 ```
+
+When a database URL is configured, set separate random `FINANCE_VIEWER_API_KEY` and `FINANCE_ADMIN_API_KEY` values (at least 32 characters) in `backend/.env`. Use the viewer key to read data and run analyses; the admin key also allows financial record ingestion. The dashboard prompts for the viewer key and keeps it in memory only.
 
 ---
 
@@ -141,6 +150,8 @@ npm run dev
 ---
 
 ## 6. Verification & Health Check
+
+The finance dashboard is available at the frontend root. Without a configured/seeded database, it identifies its records as **simulated**. With a migrated database, use the protected ingestion endpoints in [API_REFERENCE.md](./docs/API_REFERENCE.md) to add your validated records. Ingestion records data only; the platform does not initiate payments or transfers.
 
 ### 6.1 Backend Health-Check Endpoint
 ```bash

@@ -20,6 +20,8 @@
     "format": "npm --prefix backend run format && npm --prefix frontend run format",
     "test": "npm --prefix backend run test",
     "prisma:generate": "npm --prefix backend run prisma:generate",
+    "prisma:validate": "npm --prefix backend run prisma:validate",
+    "prisma:status": "npm --prefix backend run prisma:status",
     "prisma:migrate": "npm --prefix backend run prisma:migrate",
     "prisma:studio": "npm --prefix backend run prisma:studio"
   },

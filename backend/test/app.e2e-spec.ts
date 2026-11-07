@@ -9,6 +9,7 @@ describe('Health and API System (e2e)', () => {
   let app: INestApplication<App>;
 
   beforeAll(async () => {
+    vi.stubEnv('DATABASE_URL', '');
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -21,6 +22,7 @@ describe('Health and API System (e2e)', () => {
 
   afterAll(async () => {
     await app.close();
+    vi.unstubAllEnvs();
   });
 
   it('/api/health (GET) should return system health status', async () => {
@@ -35,6 +37,17 @@ describe('Health and API System (e2e)', () => {
     expect(response.body.timestamp).toBeDefined();
     expect(response.body.database).toBeDefined();
     expect(response.body.memory).toBeDefined();
+  });
+
+  it('/api/finance/overview (GET) should provide labeled demo financial data', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/finance/overview')
+      .expect(200);
+
+    expect(response.body.source).toBe('simulated');
+    expect(response.body.currency).toBe('USD');
+    expect(response.body.metrics.netIncomeCents).toBe(6_316_000);
+    expect(response.body.insights).toHaveLength(5);
   });
 
   it('/api/health/error-demo (GET) should demonstrate global exception filter', async () => {

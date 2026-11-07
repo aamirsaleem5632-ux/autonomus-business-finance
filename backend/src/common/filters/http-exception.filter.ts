@@ -45,9 +45,6 @@ export class GlobalHttpExceptionFilter implements ExceptionFilter {
         message = (resObj.message as string | string[]) || exception.message;
         error = (resObj.error as string) || exception.name;
       }
-    } else if (exception instanceof Error) {
-      message = exception.message;
-      error = exception.name;
     }
 
     const errorPayload: ErrorResponseEnvelope = {

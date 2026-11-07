@@ -1,71 +1,60 @@
-# PostgreSQL Database & Prisma ORM Setup Guide
+# PostgreSQL and Prisma Setup
 
-This document outlines how the database layer is configured and how to connect local or cloud PostgreSQL instances to the platform.
+## Configure credentials
 
----
+Copy `backend/.env.example` to `backend/.env`, replace `CHANGE_ME`, and set independent,
+random `FINANCE_VIEWER_API_KEY` and `FINANCE_ADMIN_API_KEY` values (at least 32 characters).
+The viewer role can read/compute; the admin role can also ingest records. Do not commit `.env`.
 
-## 1. PostgreSQL Connection Configuration
+For Docker Compose, create a root `.env` file containing a private `POSTGRES_PASSWORD`. Compose
+requires this value and does not provide a committed default password. Use the same password
+in the backend `DATABASE_URL`.
 
-Database connectivity is managed exclusively through the `DATABASE_URL` environment variable. **Credentials are never hardcoded.**
-
-### Connection String Format
 ```text
-postgresql://[username]:[password]@[host]:[port]/[database_name]?schema=[schema_name]
+postgresql://postgres:<password>@localhost:5432/autonomous_finance_dev?schema=public
 ```
 
-### Example `.env` Configuration
-```env
-DATABASE_URL="postgresql://postgres:postgrespassword@localhost:5432/autonomous_finance_dev?schema=public"
-```
+For a managed PostgreSQL provider, use its PostgreSQL connection URL as `DATABASE_URL` and
+include the TLS options required by that provider (commonly `sslmode=require`; combine it with
+other query parameters using `&`). URL-encode reserved characters in credentials. Prisma reads
+the URL from the datasource's `env("DATABASE_URL")` setting; no provider-specific hostname is
+hardcoded in the schema.
 
----
-
-## 2. Setting Up Local PostgreSQL with Docker
-
-For rapid local development, a pre-configured `docker-compose.yml` is provided in the repository root.
+## Initialize the database
 
 ```bash
-# Start PostgreSQL container in background
 docker compose up -d
-
-# Verify container is running and healthy
-docker compose ps
-```
-
-Default container settings:
-- **Host**: `localhost`
-- **Port**: `5432`
-- **User**: `postgres`
-- **Password**: `postgrespassword`
-- **Database**: `autonomous_finance_dev`
-
----
-
-## 3. Prisma Schema & Migrations
-
-The schema definition is located at `backend/prisma/schema.prisma`.
-
-### Initial Models
-- **`SystemHealthCheck`**: Base readiness model for database ping telemetry.
-- **`AuditLog`**: Base model for financial compliance and operation tracking.
-
-### Essential Commands
-```bash
-# Generate the type-safe Prisma Client (run after modifying schema.prisma)
+npm run prisma:validate
+npm run prisma:status
 npm run prisma:generate
-
-# Apply migrations to development database
 npm run prisma:migrate
-
-# Open Prisma Studio web GUI (inspect records)
-npm run prisma:studio
 ```
 
----
+The migration creates the health/audit tables and the financial transactions, budgets, invoices,
+accounts, and agent-run tables. The migration is required before using protected ingestion APIs.
+`prisma:status` checks the configured database and reports migration state without applying
+changes.
 
-## 4. Soft-Degradation Architecture
+## Data behavior
 
-In Phase 1, `PrismaService` implements safe connection fallback:
-- If PostgreSQL is not running when the NestJS server starts, the backend will **not crash**.
-- It logs a non-fatal warning and exposes `database: { status: "disconnected" }` on `GET /api/health`.
-- Once PostgreSQL is started, subsequent operations or queries re-establish connection cleanly.
+To run the backend and dashboard without a working database, set
+`FINANCE_DATA_MODE=simulated` in `backend/.env` and restart NestJS. This explicitly skips Prisma
+connection attempts; finance reads and specialist analyses use the labeled demo dataset, and
+`/api/health` reports runtime `status: "ok"` with database `status: "unconfigured"`. Database
+ingestion endpoints remain unavailable in this mode. Change the setting back to `database` to
+resume normal PostgreSQL connection checks.
+
+The dashboard uses simulated sample data when no database is available or the connected database
+contains no finance records. Responses identify this with `source: "simulated"`. Once records
+are ingested, the source is `database`. No sample records are silently written to PostgreSQL.
+
+Amounts are USD integer cents. Ingest transactions, budgets, invoices, and account balances via
+the admin-only `/api/finance/*` routes described in [API_REFERENCE.md](./API_REFERENCE.md).
+Ingestion and its audit record commit atomically.
+
+## Runtime resilience
+
+The health endpoint continues to report connectivity when PostgreSQL is unavailable. Read-only
+finance analysis falls back to visibly labeled simulated data; ingestion returns a service
+unavailable error unless the database is connected. A connected but unmigrated database surfaces
+its query error rather than hiding it behind demo data.

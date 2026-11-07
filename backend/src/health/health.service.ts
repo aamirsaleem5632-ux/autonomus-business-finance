@@ -16,15 +16,11 @@ export class HealthService {
     const memoryUsage = process.memoryUsage();
     const dbHealth = await this.prismaService.checkHealth();
     const env = this.configService.get<string>('nodeEnv') || 'development';
+    const simulatedMode =
+      this.configService.get<string>('financeDataMode') === 'simulated';
 
-    // In phase 1, database connectivity is prepared; if disconnected in local dev without running postgres,
-    // status is reported as degraded rather than completely offline so the service remains operational.
     const overallStatus: 'ok' | 'degraded' | 'error' =
-      dbHealth.status === 'connected'
-        ? 'ok'
-        : dbHealth.status === 'unconfigured'
-          ? 'degraded'
-          : 'degraded';
+      dbHealth.status === 'connected' || simulatedMode ? 'ok' : 'degraded';
 
     return {
       status: overallStatus,

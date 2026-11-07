@@ -1,105 +1,80 @@
-# Autonomous Business Finance Platform - System Architecture
+# Business Autonomous Finance — Architecture
 
-## 1. High-Level Architecture Overview
+## Current implementation
 
-The **Autonomous Business Finance Platform** is designed as an industrial-grade, highly reliable, decoupled web application. Phase 1 establishes the underlying architectural substrate, strict separation of concerns, and developer tooling.
+The original NestJS/React health-check foundation remains intact. A finance module is now
+mounted alongside it and exposes validated financial records, calculations, agent execution,
+and orchestration APIs.
 
-```
-+-------------------------------------------------------------------------+
-|                              Client Browser                             |
-|             React 19 + TypeScript + Vite 8 + Tailwind CSS               |
-+-------------------------------------------------------------------------+
-                                    |
-                            HTTP/REST + JSON
-                       (Vite Proxy in Dev: /api)
-                                    |
-                                    v
-+-------------------------------------------------------------------------+
-|                           Backend Service                               |
-|                         NestJS 12 + Node.js                             |
-|                                                                         |
-|  +---------------------+  +---------------------+  +-----------------+  |
-|  | Global Exception    |  | Logging Interceptor |  | Config Module   |  |
-|  | Filter (/api error) |  | (Telemetry/Latency) |  | (.env loader)   |  |
-|  +---------------------+  +---------------------+  +-----------------+  |
-|                                                                         |
-|  +-------------------------------------------------------------------+  |
-|  | Modules: HealthModule (/api/health), PrismaModule (Database Pool) |  |
-|  +-------------------------------------------------------------------+  |
-+-------------------------------------------------------------------------+
-                                    |
-                             Prisma ORM (v6)
-                                    |
-                                    v
-+-------------------------------------------------------------------------+
-|                          Data Persistence Tier                          |
-|                       PostgreSQL 16 Relational DB                       |
-+-------------------------------------------------------------------------+
+```text
+React finance dashboard
+    | typed /api/finance requests
+    v
+NestJS FinanceController
+    | viewer/admin key authorization when PostgreSQL is configured
+    v
+FinanceService
+    |-- snapshot loader: PostgreSQL records or explicitly labeled demo data
+    |-- input/output validation and execution/error logging
+    |-- specialist calculations (read-only snapshot capability)
+    `-- rules-based assistant intent routing and result composition
+    |
+    v
+Prisma/PostgreSQL: transactions, budgets, invoices, accounts, agent runs, audit logs
 ```
 
----
+## Financial data and provenance
 
-## 2. Tier Breakdown
+Money is stored and calculated as integer USD cents. The relational schema includes
+`FinancialTransaction`, `FinancialBudget`, `FinancialInvoice`, `FinancialAccount`, and
+`AgentRun`, in addition to the pre-existing health and audit models. `POST /api/finance/*`
+ingestion writes data and an audit log entry in a database transaction.
 
-### 2.1 Frontend Tier (`frontend/`)
-- **Framework**: React 19 with strict TypeScript typing.
-- **Bundler & Dev Server**: Vite 8 with hot-module replacement and automated API reverse-proxying.
-- **Styling**: Tailwind CSS with an industrial, high-contrast dark theme optimized for mission-critical financial interfaces.
-- **API Communication**: Dedicated API abstraction client (`frontend/src/api/client.ts`) with typed error extraction and response mapping.
-- **Telemetry UI**: Real-time health monitoring, network latency tracking, and error handling verification.
+When no database is configured/available, or a connected database has no finance records, the
+API supplies a deterministic sample ledger and labels the response `source: "simulated"`.
+Once financial records exist, the source is `database`. The sample is not imported into the
+database and must not be used as business reporting data.
 
-### 2.2 Backend Tier (`backend/`)
-- **Framework**: NestJS 12 running on Node.js using ES Modules (`NodeNext`).
-- **API Structure**: Standardized `/api` routing prefix with REST standards.
-- **Error Handling**: `GlobalHttpExceptionFilter` ensuring all application exceptions produce consistent, auditable JSON error envelopes.
-- **Telemetry**: `LoggingInterceptor` capturing HTTP method, path, response codes, and round-trip execution latency.
-- **Configuration**: `@nestjs/config` enforcing dynamic runtime configuration without baked-in secrets.
+Database values are read on each API request; the dashboard refreshes on demand. No automatic
+bank synchronization or scheduled polling is configured.
 
-### 2.3 Data Persistence Tier (`backend/prisma/`)
-- **ORM**: Prisma ORM with type-safe client generation.
-- **Database Engine**: PostgreSQL with connection pooling and schema isolation.
-- **Connection Lifecycle**: `PrismaService` implements lifecycle hooks (`onModuleInit`, `onModuleDestroy`) with soft-degradation: if the database is offline at startup, the service continues to operate and reports degraded health telemetry instead of hard-crashing.
+No bank, accounting-provider, or LLM credentials are present. There is no live external data
+integration or generative AI call. The assistant is an explicitly labeled rules-based
+dispatcher; specialist outputs are deterministic calculations with evidence.
 
----
+## Agent responsibilities
 
-## 3. Communication Contract
+| Specialist | Operation |
+|---|---|
+| Financial Analyst | Computes period revenue, expenses, net income, and revenue change. |
+| Expense Management | Applies description-based categories when ingesting and summarizes expense categories and high-value items. |
+| Cash Flow Management | Projects cash from the recent monthly net trend and highlights overdue receivables. |
+| Budget Planning | Computes utilization and flags budgets at/above 80% or over limit. |
+| Financial Reporting | Produces current-month and latest three-month KPIs with source figures. |
+| Finance Assistant | Routes queries to one or more specialists and combines their evidence-backed results. |
 
-All backend endpoints are scoped beneath `/api`:
+Agent routines operate only on a validated, deep-frozen snapshot and do not call database,
+network, filesystem, or payment operations. They run in the same backend process, so this is not
+an OS-level process/container sandbox or a boundary for executing untrusted code. No dynamic
+agent code or external LLM executes. There are no tools for sending money, changing balances, or
+making payments. Human review remains necessary before acting on recommendations.
 
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `GET` | `/api/health` | Comprehensive system telemetry: service name, version, uptime, memory, database status |
-| `GET` | `/api/health/error-demo` | Deliberately throws an exception to demonstrate `GlobalHttpExceptionFilter` |
+## Authorization, validation, and hooks
 
-### Standard Health Response Envelope
-```json
-{
-  "status": "ok",
-  "service": "autonomous-business-finance-backend",
-  "version": "0.1.0",
-  "environment": "development",
-  "timestamp": "2026-11-07T04:57:32.794Z",
-  "uptimeSeconds": 16,
-  "memory": {
-    "heapUsedMB": 18.24,
-    "heapTotalMB": 19.94,
-    "rssMB": 69.52
-  },
-  "database": {
-    "status": "connected",
-    "details": "PostgreSQL database responsive"
-  }
-}
-```
+- If `DATABASE_URL` is configured, finance reads and analysis require `FINANCE_VIEWER_API_KEY`
+  or `FINANCE_ADMIN_API_KEY`. Ingestion requires the admin key.
+- Keys are compared in constant time and must be at least 32 characters. The browser keeps an
+  entered viewer key only in memory. Configure HTTPS and a trusted identity gateway for
+  production; these shared keys are a small deployment RBAC boundary, not individual user SSO.
+- Ingestion validates dates, identifiers/text lengths, directions, statuses, and positive
+  integer-cent amounts. SQL uses Prisma's parameterized raw-query tags.
+- Before agent execution, input snapshots are validated and deep-frozen. Results are checked
+  before being returned or recorded. Failures are logged and surfaced instead of converted to
+  successful responses.
+- Each completed run is retained in process memory for demo mode and in `agent_runs` for a
+  connected database. Each ingestion is atomically paired with an `audit_logs` record.
 
-### Standard Error Response Envelope
-```json
-{
-  "statusCode": 400,
-  "timestamp": "2026-11-07T04:58:11.671Z",
-  "path": "/api/health/error-demo",
-  "method": "GET",
-  "message": "Demonstration of GlobalHttpExceptionFilter handling validation or client errors.",
-  "error": "Bad Request"
-}
-```
+## APIs
+
+See [API_REFERENCE.md](./API_REFERENCE.md) for routes, authorization, payloads, and response
+provenance. Health routes remain unchanged under `/api/health`.
