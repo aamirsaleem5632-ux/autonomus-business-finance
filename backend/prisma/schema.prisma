@@ -1,0 +1,35 @@
+// Prisma schema for Autonomous Business Finance Platform
+// Documentation: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// SystemHealthCheck records health ping telemetry and database connectivity verification
+model SystemHealthCheck {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  status    String   @default("ok")
+  notes     String?
+
+  @@map("system_health_checks")
+}
+
+/// AuditLog placeholder to establish enterprise audit trail architecture for financial operations
+model AuditLog {
+  id        String   @id @default(uuid())
+  action    String
+  actorId   String   @map("actor_id")
+  entity    String
+  entityId  String   @map("entity_id")
+  metadata  Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([entity, entityId])
+  @@map("audit_logs")
+}
